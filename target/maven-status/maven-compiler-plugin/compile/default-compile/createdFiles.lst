@@ -1,0 +1,8 @@
+com/projet/model/Categorie$CategorieBuilder.class
+com/projet/model/Marque$MarqueBuilder.class
+com/projet/model/Categorie.class
+com/projet/model/Marque.class
+com/projet/model/Accessoire.class
+com/projet/config/RedisConfig.class
+com/projet/model/Accessoire$AccessoireBuilder.class
+com/projet/PhoneAccessoriesApplication.class

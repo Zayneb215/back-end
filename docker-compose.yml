@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+
+  # ─────────────────────────────────────────
+  #  Base de données PostgreSQL
+  # ─────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: phone_accessories_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: phone_accessories_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # script SQL exécuté au démarrage
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  #  Cache Redis
+  # ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: phone_accessories_redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    command: redis-server --appendonly yes  # persistance activée
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  #  Application Spring Boot
+  #  (décommenter quand le JAR est prêt)
+  # ─────────────────────────────────────────
+  # app:
+  #   image: phone-accessories-backend:latest
+  #   container_name: phone_accessories_app
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/phone_accessories_db
+  #     SPRING_DATASOURCE_USERNAME: postgres
+  #     SPRING_DATASOURCE_PASSWORD: postgres
+  #     SPRING_DATA_REDIS_HOST: redis
+  #     SPRING_DATA_REDIS_PORT: 6379
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
+
+# ─────────────────────────────────────────
+#  Volumes persistants
+# ─────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+
+# ─────────────────────────────────────────
+#  Réseau interne
+# ─────────────────────────────────────────
+networks:
+  app-network:
+    driver: bridge
